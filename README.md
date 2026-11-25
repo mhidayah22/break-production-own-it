@@ -16,8 +16,10 @@ and a rollback that is broken too.
 python3 main.py
 ```
 
-It validates the line (one line, at most 200 characters) and writes it to
-`entry.txt` inside `MAKEFUN_OUTPUT_DIR`.
+It validates the line (one line, at most 200 characters), writes it to
+`entry.txt` inside `MAKEFUN_OUTPUT_DIR`, and prints it. The written file
+is verified byte-for-byte after the write, so the output is identical on
+every run.
 
 ---
 

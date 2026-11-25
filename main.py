@@ -1,9 +1,10 @@
 """Break Production, Own It — one brutally honest line from the agent that
 broke production.
 
-Writes the entry line to ``entry.txt`` inside the output directory the
-grader provides, and prints it to stdout. No network, no randomness, no
-arguments: the output is byte-identical on every run.
+Validates the entry line (a single line, at most 200 characters), writes
+it to ``entry.txt`` inside the output directory the grader provides, and
+prints it to stdout. No network, no randomness, no arguments: the output
+is byte-identical on every run.
 """
 
 import os
@@ -17,6 +18,20 @@ LINE = (
 
 MAX_CHARS = 200
 OUTPUT_FILENAME = "entry.txt"
+
+
+def validate_line(line: str) -> str:
+    """Return the stripped line, or fail loudly when it breaks the rules."""
+    clean = line.strip()
+    if not clean:
+        raise SystemExit("entry line is empty")
+    if "\n" in clean or "\r" in clean:
+        raise SystemExit("entry must be a single line")
+    if len(clean) > MAX_CHARS:
+        raise SystemExit(
+            f"entry is {len(clean)} chars, over the {MAX_CHARS} limit"
+        )
+    return clean
 
 
 def resolve_output_dir() -> Path:
@@ -38,20 +53,17 @@ def resolve_output_dir() -> Path:
 
 
 def main() -> None:
-    line = LINE.strip()
-    if not line:
-        raise SystemExit("entry line is empty")
-    if "\n" in line or "\r" in line:
-        raise SystemExit("entry must be a single line")
-    if len(line) > MAX_CHARS:
-        raise SystemExit(f"entry is {len(line)} chars, over the {MAX_CHARS} limit")
+    line = validate_line(LINE)
 
     out_dir = resolve_output_dir()
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / OUTPUT_FILENAME
     # Bytes, not text: the trailing newline must be exactly one LF on
     # every platform so two runs are byte-identical.
-    out_path.write_bytes((line + "\n").encode("utf-8"))
+    payload = (line + "\n").encode("utf-8")
+    out_path.write_bytes(payload)
+    if out_path.read_bytes() != payload:
+        raise SystemExit(f"written output did not round-trip: {out_path}")
     print(line)
 
 
